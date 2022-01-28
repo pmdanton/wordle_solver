@@ -17,6 +17,21 @@ def get_lexicon(filename="en.txt"):
     return list(map(str.strip, word_list))
 
 
+def compare(guess, target):
+    guess = list(guess)
+    target = list(target)
+    result = [Clue.WRONG] * len(guess)
+    for idx, (g, t) in enumerate(zip(guess, target)):
+        if g == t:
+            result[idx] = Clue.RIGHT
+            target[idx] = "."
+    for idx, g in enumerate(guess):
+        if result[idx] != Clue.RIGHT and g in target:
+            result[idx] = Clue.MISPLACED
+            target[target.index(g)] = "."
+    return result
+
+
 class Game:
     def __init__(self, lexicon_filename="en.txt"):
         self.word_list = get_lexicon(lexicon_filename)
@@ -47,20 +62,6 @@ class Game:
         return self.word_list[0]
 
 
-def compare(guess, target):
-    guess = list(guess)
-    target = list(target)
-    result = [Clue.WRONG] * len(guess)
-    for idx, (g, t) in enumerate(zip(guess, target)):
-        if g == t:
-            result[idx] = Clue.RIGHT
-            target[idx] = "."
-    for idx, g in enumerate(guess):
-        if result[idx] != Clue.RIGHT and g in target:
-            result[idx] = Clue.MISPLACED
-    return result
-
-
 def resolve(target, lexicon_filename="en.txt", max_attempts=100, verbose=True):
     game = Game(lexicon_filename=lexicon_filename)
     for k in range(max_attempts):
@@ -75,9 +76,9 @@ def resolve(target, lexicon_filename="en.txt", max_attempts=100, verbose=True):
     return 0
 
 
-def resolve_all(filename="results.csv", lexicon_filename=None):
+def resolve_all(lexicon_filename, output_filename="results.csv"):
     word_list = get_lexicon(lexicon_filename)
-    with open(filename, "a") as f:
+    with open(output_filename, "a") as f:
         for target in word_list:
             num_steps = resolve(target, word_list, verbose=False)
             f.write(target + "," + str(num_steps) + "\n")

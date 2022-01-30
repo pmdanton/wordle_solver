@@ -10,7 +10,7 @@ class Clue(enum.Enum):
     RIGHT = 2
 
 
-def get_lexicon(filename="en.txt"):
+def get_lexicon(filename="wordle.txt"):
     with open(filename) as f:
         word_list = f.readlines()
 
@@ -45,8 +45,6 @@ class Game:
             if feedback == compare(word, w):
                 compatible_words.append(w)
         self.word_list = compatible_words
-        if len(self.word_list) == 0:
-            raise ValueError("There are no compatible words!")
 
     def loglikelihood(self, word):
         return np.sum(np.log(list(map(self.cntr.get, word))))
@@ -58,17 +56,19 @@ class Game:
         )
 
     def propose_word(self):
+        if len(self.word_list) == 0:
+            raise ValueError("There are no compatible words!")
         self._sort_word_list()
         return self.word_list[0]
 
 
-def resolve(target, lexicon_filename="en.txt", max_attempts=100, verbose=True):
+def resolve(target, lexicon_filename="wordle.txt", max_attempts=100, verbose=True):
     game = Game(lexicon_filename=lexicon_filename)
     for k in range(max_attempts):
         guess = game.propose_word()
         if verbose:
             num_words = len(game.word_list)
-            print("guess is", guess, "chosen from", str(num_words), "words")
+            print("guess is", guess, "chosen from", num_words, "words")
         if guess == target:
             return k + 1
         feedback = compare(guess, target)

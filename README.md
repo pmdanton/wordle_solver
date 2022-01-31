@@ -5,7 +5,7 @@ You can test how the heuristic finds a given target with the function
 ```python
 resolve(target)
 ```
-By default the function will print each attempted word, along with the number of compatible words at each round.
+By default the function will print each attempted word
 
 ##Interactive solver
 To solve the real thing, first use the Game object as follows, until solved:

@@ -64,22 +64,33 @@ class Game:
 
 def resolve(target, lexicon_filename="wordle.txt", max_attempts=100, verbose=True):
     game = Game(lexicon_filename=lexicon_filename)
+    attempts = []
     for k in range(max_attempts):
         guess = game.propose_word()
+        attempts.append(guess)
         if verbose:
             num_words = len(game.word_list)
             print("guess is", guess, "chosen from", num_words, "words")
         if guess == target:
-            return k + 1
+            break
         feedback = compare(guess, target)
         game.feedback(guess, feedback)
-    return 0
+    return attempts
 
 
 def resolve_all(lexicon_filename, output_filename="results.csv"):
     word_list = get_lexicon(lexicon_filename)
+    game = Game(lexicon_filename=lexicon_filename)
     with open(output_filename, "a") as f:
         for target in word_list:
-            num_steps = resolve(target, word_list, verbose=False)
-            f.write(target + "," + str(num_steps) + "\n")
+            game.word_list = word_list
+            attempts = []
+            for k in range(6):
+                guess = game.propose_word()
+                attempts.append(guess)
+                if guess == target:
+                    break
+                feedback = compare(guess, target)
+                game.feedback(guess, feedback)
+            f.write(",".join(attempts) + "\n")
     print("Complete!")

@@ -1,4 +1,5 @@
 import enum
+from multiprocessing import Pool
 from typing import Counter
 
 import numpy as np
@@ -17,6 +18,10 @@ def get_lexicon(filename="wordle.txt"):
     return list(map(str.strip, word_list))
 
 
+def substrings(word):
+    return [word[i:j] for i in range(len(word)) for j in range(i + 1, len(word) + 1)]
+
+
 def compare(guess, target):
     guess = list(guess)
     target = list(target)
@@ -33,9 +38,8 @@ def compare(guess, target):
 
 
 class Game:
-    def __init__(self, lexicon_filename="en.txt"):
+    def __init__(self, lexicon_filename="wordle.txt"):
         self.word_list = get_lexicon(lexicon_filename)
-        self.cntr = Counter("".join(self.word_list))
         self._sort_word_list()
 
     def feedback(self, word, feedback):
@@ -47,9 +51,12 @@ class Game:
         self.word_list = compatible_words
 
     def loglikelihood(self, word):
-        return np.sum(np.log(list(map(self.cntr.get, word))))
+        return np.sum(np.log(list(map(self.cntr.get, substrings(word)))))
 
     def _sort_word_list(self):
+        self.cntr = Counter()
+        for word in self.word_list:
+            self.cntr.update(substrings(word))
         self.word_list.sort(
             reverse=True,
             key=lambda x: (len(set(x)), self.loglikelihood(x)),
@@ -62,10 +69,10 @@ class Game:
         return self.word_list[0]
 
 
-def resolve(target, lexicon_filename="wordle.txt", max_attempts=100, verbose=True):
+def resolve(target, lexicon_filename="wordle.txt", max_attempts=6, verbose=False):
     game = Game(lexicon_filename=lexicon_filename)
     attempts = []
-    for k in range(max_attempts):
+    for _ in range(max_attempts):
         guess = game.propose_word()
         attempts.append(guess)
         if verbose:
@@ -78,19 +85,12 @@ def resolve(target, lexicon_filename="wordle.txt", max_attempts=100, verbose=Tru
     return attempts
 
 
-def resolve_all(lexicon_filename, output_filename="results.csv"):
+def resolve_all(
+    lexicon_filename="wordle.txt", output_filename="results.csv", num_cpu=12
+):
     word_list = get_lexicon(lexicon_filename)
-    game = Game(lexicon_filename=lexicon_filename)
+    p = Pool(num_cpu)
+    results = p.map(resolve, word_list)
     with open(output_filename, "a") as f:
-        for target in word_list:
-            game.word_list = word_list
-            attempts = []
-            for k in range(6):
-                guess = game.propose_word()
-                attempts.append(guess)
-                if guess == target:
-                    break
-                feedback = compare(guess, target)
-                game.feedback(guess, feedback)
-            f.write(",".join(attempts) + "\n")
+        f.writelines(list(map(lambda x: ",".join(x) + "\n", results)))
     print("Complete!")

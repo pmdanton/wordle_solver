@@ -76,6 +76,7 @@ docs/_build/
 target/
 
 # Jupyter Notebook
+*.ipynb
 .ipynb_checkpoints
 
 # IPython
@@ -142,3 +143,6 @@ logs/
 
 # VScode workspace
 *.code-workspace
+.vscode/
+
+*.csv

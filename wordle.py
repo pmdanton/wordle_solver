@@ -14,7 +14,6 @@ class Clue(enum.Enum):
 def get_lexicon(filename="wordle.txt"):
     with open(filename) as f:
         word_list = f.readlines()
-
     return list(map(str.strip, word_list))
 
 
@@ -40,7 +39,7 @@ def compare(guess, target):
 class Game:
     def __init__(self, lexicon_filename="wordle.txt"):
         self.word_list = get_lexicon(lexicon_filename)
-        self._sort_word_list()
+        self.cntr = Counter()
 
     def feedback(self, word, feedback):
         feedback = list(map(Clue, feedback))
@@ -54,7 +53,6 @@ class Game:
         return np.sum(np.log(list(map(self.cntr.get, substrings(word)))))
 
     def _sort_word_list(self):
-        self.cntr = Counter()
         for word in self.word_list:
             self.cntr.update(substrings(word))
         self.word_list.sort(
@@ -69,7 +67,7 @@ class Game:
         return self.word_list[0]
 
 
-def resolve(target, lexicon_filename="wordle.txt", max_attempts=6, verbose=False):
+def resolve(target, lexicon_filename="wordle.txt", max_attempts=99, verbose=False):
     game = Game(lexicon_filename=lexicon_filename)
     attempts = []
     for _ in range(max_attempts):
@@ -86,7 +84,7 @@ def resolve(target, lexicon_filename="wordle.txt", max_attempts=6, verbose=False
 
 
 def resolve_all(
-    lexicon_filename="wordle.txt", output_filename="results.csv", num_cpu=12
+    lexicon_filename="wordle.txt", output_filename="results.csv", num_cpu=1
 ):
     word_list = get_lexicon(lexicon_filename)
     p = Pool(num_cpu)
